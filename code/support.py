@@ -54,14 +54,15 @@ def character_importer(cols, rows, *path):
 	new_dict = {}
 	for row, direction in enumerate(('down', 'left', 'right', 'up')):
 		new_dict[direction] = [frame_dict[(col, row)] for col in range(cols)]
+		new_dict[f'{direction}_idle'] = [frame_dict[(0, row)]]
 	return new_dict
 
 def all_characters_importer(*path):
 	new_dict = {}
-	for folder_path, sub_folders, image_names in walk(join(*path)):
+	for _, __, image_names in walk(join(*path)):
 		for image in image_names:
 			image_names = image.split('.')[0]
-			new_dict[image_names] = character_importer(4, 4, *path)
+			new_dict[image_names] = character_importer(4, 4, *path, image_names)
 	return new_dict
 
 def coast_importer(cols, rows, *path):

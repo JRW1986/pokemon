@@ -1,12 +1,29 @@
 from settings import *
 
-class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups):
+class Entity(pygame.sprite.Sprite):
+    def __init__(self, pos, frames, groups):
         super().__init__(groups)
-        self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
-        self.image.fill('red')
+
+        # graphics setup
+        self.frames = frames
+        self.frame_index = 0
+
+        # sprite setup
+        self.image = self.frames['down'][self.frame_index]
         self.rect = self.image.get_frect(center = pos)
 
+    def animate(self, dt):
+        self.frame_index += ANIMATION_SPEED * dt
+        self.image = self.frames['down'][int(self.frame_index) % len(self.frames['down'])]
+
+    def update(self, dt):
+        self.animate(dt)
+        
+
+class Player(Entity):
+    def __init__(self, pos, frames, groups):
+        super().__init__(pos, frames, groups)
+        
         self.direction = vector()
 
     def input(self):
@@ -30,3 +47,4 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt):
         self.input()
         self.move(dt)
+        self.animate(dt)
