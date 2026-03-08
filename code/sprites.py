@@ -1,15 +1,16 @@
 from settings import *
 
 class Sprite(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups):
+    def __init__(self, pos, surf, groups, z = WORLD_LAYERS['main']):
         super().__init__(groups)
         self.image = surf
-        self.rect = self.image.get_frect(topleft=pos)
+        self.rect = self.image.get_rect(topleft=pos)
+        self.z = z
 
 class AnimatedSprite(Sprite):
-    def __init__(self, pos, frames, groups):
+    def __init__(self, pos, frames, groups, z = WORLD_LAYERS['main']):
         self.frames_index, self.frames = 0, frames
-        super().__init__(pos, frames[0], groups)
+        super().__init__(pos, frames[0], groups, z)
 
     def animate(self, dt):
         self.frames_index += ANIMATION_SPEED * dt
