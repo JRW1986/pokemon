@@ -50,7 +50,10 @@ class Game:
 
         # objects
         for obj in tmx_map.get_layer_by_name('Objects'):
-            Sprite((obj.x, obj.y), obj.image, self.all_sprites)
+            if obj.name == 'top':
+                Sprite((obj.x, obj.y), obj.image, self.all_sprites, WORLD_LAYERS['top'])
+            else:
+                Sprite((obj.x, obj.y), obj.image, self.all_sprites)
 
         # grass patches
         for obj in tmx_map.get_layer_by_name('Monsters'):

@@ -4,7 +4,7 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, pos, frames, groups, facing_direction):
         super().__init__(groups)
         self.z = WORLD_LAYERS['main']
-
+        
         # graphics setup
         self.frames = frames
         self.frame_index = 0
@@ -17,6 +17,8 @@ class Entity(pygame.sprite.Sprite):
         # sprite setup
         self.image = self.frames[self.facing_direction][self.frame_index]
         self.rect = self.image.get_frect(center = pos)
+        
+        self.y_sort = self.rect.centery
 
     def animate(self, dt):
         self.frame_index += ANIMATION_SPEED * dt
@@ -62,6 +64,7 @@ class Player(Entity):
         self.rect.center += self.direction * 250 * dt
 
     def update(self, dt):
+        self.y_sort = self.rect.centery
         self.input()
         self.move(dt)
         self.animate(dt)
