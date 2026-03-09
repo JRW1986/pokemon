@@ -6,11 +6,13 @@ class Sprite(pygame.sprite.Sprite):
         self.image = surf
         self.rect = self.image.get_rect(topleft=pos)
         self.z = z
-        self.y_sort = self.rect.centery - 40
+        self.y_sort = self.rect.centery
 
-class MonsterPatchSprite(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups, z = WORLD_LAYERS['main']):
-        super().__init__(groups)
+class MonsterPatchSprite(Sprite):
+    def __init__(self, pos, surf, groups, biome):
+        super().__init__(pos, surf, groups, z = WORLD_LAYERS['main'] if biome != 'sand' else WORLD_LAYERS['bg'])
+        self.y_sort -= 40
+        self.biome = biome
 
 class AnimatedSprite(Sprite):
     def __init__(self, pos, frames, groups, z = WORLD_LAYERS['main']):

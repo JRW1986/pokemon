@@ -17,6 +17,7 @@ class Entity(pygame.sprite.Sprite):
         # sprite setup
         self.image = self.frames[self.facing_direction][self.frame_index]
         self.rect = self.image.get_frect(center = pos)
+        self.hitbox = self.rect.inflate(-self.rect.width / 2, -60)
         
         self.y_sort = self.rect.centery
 
@@ -62,6 +63,7 @@ class Player(Entity):
 
     def move(self, dt):
         self.rect.center += self.direction * 250 * dt
+        self.hitbox.center = self.rect.center
 
     def update(self, dt):
         self.y_sort = self.rect.centery

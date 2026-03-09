@@ -1,7 +1,7 @@
 from settings import *
 from pytmx.util_pygame import load_pygame
 from os.path import join
-from sprites import Sprite, AnimatedSprite
+from sprites import Sprite, AnimatedSprite, MonsterPatchSprite
 from entities import  Player, Character
 from groups import AllSprites
 from support import *
@@ -14,6 +14,7 @@ class Game:
 
         # groups
         self.all_sprites = AllSprites()
+        self.collision_sprites = pygame.sprite.Group()
 
         self.import_assets()
         self.setup(self.tmx_maps['world'], 'house')
@@ -53,11 +54,11 @@ class Game:
             if obj.name == 'top':
                 Sprite((obj.x, obj.y), obj.image, self.all_sprites, WORLD_LAYERS['top'])
             else:
-                Sprite((obj.x, obj.y), obj.image, self.all_sprites)
+                Sprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
 
         # grass patches
         for obj in tmx_map.get_layer_by_name('Monsters'):
-            Sprite((obj.x, obj.y), obj.image, self.all_sprites)
+            MonsterPatchSprite((obj.x, obj.y), obj.image, self.all_sprites, obj.properties['biome'])
 
         # entities
         for obj in tmx_map.get_layer_by_name('Entities'):
