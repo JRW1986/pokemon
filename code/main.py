@@ -1,7 +1,7 @@
 from settings import *
 from pytmx.util_pygame import load_pygame
 from os.path import join
-from sprites import Sprite, AnimatedSprite, MonsterPatchSprite
+from sprites import Sprite, AnimatedSprite, MonsterPatchSprite , BorderSprite, CollisionSprite, CollisionTreeSprite
 from entities import  Player, Character
 from groups import AllSprites
 from support import *
@@ -53,8 +53,14 @@ class Game:
         for obj in tmx_map.get_layer_by_name('Objects'):
             if obj.name == 'top':
                 Sprite((obj.x, obj.y), obj.image, self.all_sprites, WORLD_LAYERS['top'])
+            elif obj.name == 'tree':
+                CollisionTreeSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
             else:
-                Sprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+                CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+
+        # collision objects
+        for obj in tmx_map.get_layer_by_name('Collisions'):
+            BorderSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
 
         # grass patches
         for obj in tmx_map.get_layer_by_name('Monsters'):
@@ -68,13 +74,14 @@ class Game:
                         pos = (obj.x, obj.y), 
                         frames = self.overworld_frames['characters']['player'],
                         groups = self.all_sprites,
-                        facing_direction = obj.properties['direction']
+                        facing_direction = obj.properties['direction'],
+                        collision_sprites = self.collision_sprites
                     )
             else:
                 Character(
                     pos = (obj.x, obj.y),
                     frames = self.overworld_frames['characters'][obj.properties['graphic']],
-                    groups = self.all_sprites,
+                    groups = (self.all_sprites, self.collision_sprites),
                     facing_direction = obj.properties['direction']
                 )
 

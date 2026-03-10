@@ -7,6 +7,23 @@ class Sprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
         self.z = z
         self.y_sort = self.rect.centery
+        self.hitbox = self.rect.copy()
+
+class BorderSprite(Sprite):
+    def __init__(self, pos, surf, groups):
+        super().__init__(pos, surf, groups)
+        self.hitbox = self.rect.copy()
+
+class CollisionSprite(Sprite):
+    def __init__(self, pos, surf, groups):
+        super().__init__(pos, surf, groups)
+        self.hitbox = self.rect.inflate(0, -self.rect.height * 0.4)
+
+class CollisionTreeSprite(Sprite):
+    def __init__(self, pos, surf, groups):
+        super().__init__(pos, surf, groups)
+        self.hitbox = self.rect.inflate(-self.rect.width * 0.5, -self.rect.height * 0.7)
+        self.hitbox.center = self.rect.center - vector(0, 20)
 
 class MonsterPatchSprite(Sprite):
     def __init__(self, pos, surf, groups, biome):
