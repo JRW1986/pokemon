@@ -13,6 +13,7 @@ class Entity(pygame.sprite.Sprite):
         # movement setup
         self.direction = vector()
         self.speed = 250
+        self.blocked = False
 
         # sprite setup
         self.image = self.frames[self.facing_direction][self.frame_index]
@@ -34,13 +35,33 @@ class Entity(pygame.sprite.Sprite):
                 self.facing_direction = 'down' if self.direction.y > 0 else 'up'
         return f'{self.facing_direction}{'' if moving else '_idle'}'
     
+    def change_facing_direction(self, target_pos):
+        relation = vector(target_pos) - vector(self.rect.center)
+        if abs(relation.y) < 30:
+            self.facing_direction = 'right' if relation.x > 0 else 'left'
+        else:
+            self.facing_direction = 'down' if relation.y > 0 else 'up' 
+
+    def block_movement(self):
+        self.blocked = True
+        self.direction = vector(0, 0)
+
+    def unblock_movement(self):
+        self.blocked = False
+
     def update(self, dt):
         self.animate(dt)
 
 class Character(Entity):
-    def __init__(self, pos, frames, groups, facing_direction):
+    def __init__(self, pos, frames, groups, facing_direction, character_data):
         super().__init__(pos, frames, groups, facing_direction)
+        self.character_data = character_data
 
+    def get_dialogue(self):
+        return self.character_data['dialog'][f'defeated' if self.character_data['defeated'] else 'default']
+
+    def update(self, dt):
+        self.animate(dt)
 
 class Player(Entity):
     def __init__(self, pos, frames, groups, facing_direction, collision_sprites):
@@ -53,14 +74,14 @@ class Player(Entity):
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             input_vector.y -= 1
-        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             input_vector.y += 1
-        elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             input_vector.x -= 1
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             input_vector.x += 1
 
-        self.direction = input_vector
+        self.direction = input_vector.normalize() if input_vector.magnitude() > 0 else vector()
 
     def move(self, dt):
         self.rect.centerx += self.direction.x * self.speed * dt
@@ -91,7 +112,8 @@ class Player(Entity):
 
     def update(self, dt):
         self.y_sort = self.rect.centery
-        self.input()
-        self.move(dt)
+        if not self.blocked:
+            self.input()
+            self.move(dt)
         self.animate(dt)
 
