@@ -93,7 +93,11 @@ class Game:
                     frames = self.overworld_frames['characters'][obj.properties['graphic']],
                     groups = (self.all_sprites, self.collision_sprites, self.character_sprites),
                     facing_direction = obj.properties['direction'],
-                    character_data = TRAINER_DATA[obj.properties['character_id']]
+                    character_data = TRAINER_DATA[obj.properties['character_id']],
+                    player = self.player,
+                    create_dialog = self.create_dialogue,
+                    collision_sprites = self.collision_sprites,
+                    radius = obj.properties['radius']
                 )
 
     def input(self):
@@ -108,8 +112,12 @@ class Game:
 
     def create_dialogue(self, character):
         if not self.dialog_tree:
-            self.dialog_tree = DialogTree(character, self.player, self.all_sprites, self.fonts['dialog'])
-                  
+            self.dialog_tree = DialogTree(character, self.player, self.all_sprites, self.fonts['dialog'], self.end_dialogue)
+
+    def end_dialogue(self, character):
+        self.dialog_tree = None
+        self.player.unblock_movement()
+
     def run(self):
         while True:
             dt = self.clock.tick(60) / 1000
