@@ -81,6 +81,12 @@ def coast_importer(cols, rows, *path):
 			new_dict[terrain][key] = [frame_dict[(pos[0] + index * 3, pos[1])] for row in range(0,rows, 3)]
 	return new_dict
 
+def tmx_importer(*path):
+	tmx_dict = {}
+	for folder_path, sub_folders, file_names in walk(join(*path)):
+		for file_name in file_names:
+			tmx_dict[file_name.split('.')[0]] = load_pygame(join(folder_path, file_name))
+	return tmx_dict
 
 # game functions
 
