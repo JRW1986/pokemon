@@ -174,4 +174,3 @@ class Player(Entity):
             self.input()
             self.move(dt)
         self.animate(dt)
-
