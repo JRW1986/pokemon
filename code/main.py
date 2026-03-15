@@ -23,10 +23,12 @@ class Game:
             0: Monster('Ivieron', 32),
 			1: Monster('Atrox', 15),
 			2: Monster('Cindrill', 16),
-			3: Monster('Atrox', 10),
+			3: Monster('Pluma', 10),
 			4: Monster('Sparchu', 11),
 			5: Monster('Gulfin', 9),
 			6: Monster('Jacana', 10),
+            7: Monster('Finsta', 12),
+            8: Monster('Finiette', 12),
         }
 
         # groups
