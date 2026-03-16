@@ -88,7 +88,25 @@ def tmx_importer(*path):
 			tmx_dict[file_name.split('.')[0]] = load_pygame(join(folder_path, file_name))
 	return tmx_dict
 
+def monster_importer(cols, rows, *path):
+	monster_dict = {}
+	for folder_path, sub_folders, image_names in walk(join(*path)):
+		for image_name in image_names:
+			image_names = image_name.split('.')[0]
+			monster_dict[image_names] = {}
+			frame_dict = import_tilemap(cols, rows, *path, image_names)
+			for row, key in enumerate(('idle', 'attack')):
+				monster_dict[image_names][key] = [frame_dict[(col, row)] for col in range(cols)]
+	return monster_dict
+
 # game functions
+def draw_bar(surf, rect, value, max_value, color, bg_color, radius = 1):
+	ratio = rect.width / max_value
+	bg_rect = rect.copy()
+	progess = max(0, min(rect.width, value * ratio))
+	progess_rect = pygame.FRect(rect.topleft, (progess, rect.height))
+	pygame.draw.rect(surf, bg_color, bg_rect, 0, radius)
+	pygame.draw.rect(surf, color, progess_rect, 0, radius)
 
 def check_connection(radius, entity, target, tolerance = 30):
 	relation = vector(target.rect.center) - vector(entity.rect.center)

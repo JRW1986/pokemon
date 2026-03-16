@@ -1,5 +1,6 @@
 from settings import *
 from timer import Timer
+from support import draw_bar
 
 class MonsterIndex:
     def __init__(self, monster, fonts, monster_frames):
@@ -7,9 +8,11 @@ class MonsterIndex:
         self.fonts = fonts
         self.monster = monster
         self.monster_frames = monster_frames
+        self.frame_index = 0
 
         # frame
         self.monster_icons = self.monster_frames['icons']
+        self.monster_frames = self.monster_frames['monsters']
 
         # tint surf
         self.tint_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -96,9 +99,50 @@ class MonsterIndex:
             pygame.draw.line(self.display_surface, COLORS['light-gray'], (left, y), (right, y))
 
     def display_main(self, dt):
+        # data
+        monster = self.monster[self.index]
+
+
         # main bg
         rect = pygame.FRect(self.main_rect.left + self.list_width, self.main_rect.top, self.main_rect.width - self.list_width, self.main_rect.height)
-        pygame.draw.rect(self.display_surface, COLORS['dark'], rect)
+        pygame.draw.rect(self.display_surface, COLORS['dark'], rect, 0,12,0,12,0)
+        pygame.draw.rect(self.display_surface, COLORS['light-gray'], rect, 4,12,0,12,0)
+
+        # monster display
+        top_rect = pygame.FRect(rect.left, rect.top, rect.width, rect.height * 0.4)
+        pygame.draw.rect(self.display_surface, COLORS[monster.element], top_rect, 0,0,0,12)
+        
+        # monster image
+        self.frame_index += ANIMATION_SPEED * dt
+
+        monster_surf = self.monster_frames[monster.name]['idle'][int(self.frame_index) % len(self.monster_frames[monster.name]['idle'])]
+        monster_rect = monster_surf.get_frect(center = top_rect.center)
+        self.display_surface.blit(monster_surf, monster_rect)
+
+        # monster name
+        name_surf = self.fonts['bold'].render(monster.name, False, COLORS['white'])
+        name_rect = name_surf.get_frect(topleft = top_rect.topleft + vector(10, 10))
+        self.display_surface.blit(name_surf, name_rect)
+
+        # monster level
+        level_surf = self.fonts['regular'].render(f'Level {monster.level}', False, COLORS['white'])
+        level_rect = level_surf.get_frect(bottomleft = top_rect.bottomleft + vector(10, -16))
+        self.display_surface.blit(level_surf, level_rect)
+        draw_bar(
+            surf = self.display_surface,
+            rect = pygame.FRect(level_rect.bottomleft, (100, 4)),
+            value = monster.xp,
+            max_value = monster.level_up,
+            color = COLORS['white'],
+            bg_color = COLORS['dark']
+        )
+
+        # element
+        element_surf = self.fonts['regular'].render(f'Element: {monster.element.capitalize()}', False, COLORS['white'])
+        element_rect = element_surf.get_frect(bottomright = top_rect.bottomright + vector(-10,-10))
+        self.display_surface.blit(element_surf, element_rect)
+
+        
 
     def update(self, dt):
         self.timer['nav'].update()
