@@ -12,7 +12,8 @@ class MonsterIndex:
 
         # frame
         self.monster_icons = self.monster_frames['icons']
-        self.monster_frames = self.monster_frames['monsters']
+        self.monster_frame = self.monster_frames['monsters']
+        self.ui_frames = self.monster_frames['ui']
 
         # tint surf
         self.tint_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -115,7 +116,7 @@ class MonsterIndex:
         # monster image
         self.frame_index += ANIMATION_SPEED * dt
 
-        monster_surf = self.monster_frames[monster.name]['idle'][int(self.frame_index) % len(self.monster_frames[monster.name]['idle'])]
+        monster_surf = self.monster_frame[monster.name]['idle'][int(self.frame_index) % len(self.monster_frame[monster.name]['idle'])]
         monster_rect = monster_surf.get_frect(center = top_rect.center)
         self.display_surface.blit(monster_surf, monster_rect)
 
@@ -142,7 +143,69 @@ class MonsterIndex:
         element_rect = element_surf.get_frect(bottomright = top_rect.bottomright + vector(-10,-10))
         self.display_surface.blit(element_surf, element_rect)
 
-        
+        # health and energy
+        bar_data = {
+            'width': rect.width * 0.45,
+            'height': 30,
+            'top': top_rect.bottom + rect.width * 0.03,
+            'left_side': rect.left + rect.width / 4
+        }
+
+        # health
+        healthbar_rect = pygame.FRect((0,0), (bar_data['width'], bar_data['height'])).move_to(midtop = (bar_data['left_side'], bar_data['top']))
+        draw_bar(
+            surf = self.display_surface,
+            rect = healthbar_rect,
+            value = monster.health,
+            max_value = monster.get_stat('max_health'),
+            color = COLORS[monster.element],
+            bg_color = COLORS['black']
+        )
+        hp_text = self.fonts['regular'].render(f'HP: {monster.health} / {monster.get_stat("max_health")}', False, COLORS['white'])
+        hp_rect = hp_text.get_frect(midleft = healthbar_rect.midleft + vector(10, 0))
+        self.display_surface.blit(hp_text, hp_rect)
+
+        # energy
+        energybar_rect = pygame.FRect((0,0), (bar_data['width'], bar_data['height'])).move_to(topleft = (healthbar_rect.left, healthbar_rect.bottom + bar_data['height'] * 0.5))
+        draw_bar(
+            surf = self.display_surface,
+            rect = energybar_rect,
+            value = monster.energy,
+            max_value = monster.get_stat('max_energy'),
+            color = COLORS['light'],
+            bg_color = COLORS['black']
+        )
+        energy_text = self.fonts['regular'].render(f'Energy: {monster.energy} / {monster.get_stat("max_energy")}', False, COLORS['white'])
+        energy_rect = energy_text.get_frect(midleft = energybar_rect.midleft + vector(10, 0))
+        self.display_surface.blit(energy_text, energy_rect)
+
+        # info
+        sides = {'left': healthbar_rect.left, 'right': element_rect.right}
+        info_height = rect.bottom - energybar_rect.bottom
+
+        # stats
+        stats_rect = pygame.FRect(sides['left'], energybar_rect.bottom, healthbar_rect.width, info_height).inflate(0, -15)
+        pygame.draw.rect(self.display_surface, COLORS['light-gray'], stats_rect)
+        stats_text_surf = self.fonts['regular'].render('Stats:', False, COLORS['white'])
+        stats_text_rect = stats_text_surf.get_frect(topleft = stats_rect.topleft + vector(10, 0))
+        self.display_surface.blit(stats_text_surf, stats_text_rect)
+
+        monster_stats = monster.get_stats()
+        stat_height = stats_rect.height / len(monster_stats)
+
+        for index, (stat, value) in enumerate(monster_stats.items()):
+            single_stat_rect = pygame.FRect(stats_rect.left, stats_rect.top + (index + 1) * stat_height / 1.11, stats_rect.width, stat_height)
+            
+            # icon
+            icon_surf = self.ui_frames[stat]
+            icon_rect = icon_surf.get_frect(midleft = single_stat_rect.midleft + vector(5, 0))
+            self.display_surface.blit(icon_surf, icon_rect)
+
+            # text
+            stat_text = self.fonts['regular'].render(f'{stat.capitalize()}: {value}', False, COLORS['white'])
+            stat_text_rect = stat_text.get_frect(topleft = single_stat_rect.topleft + vector(10, 0))
+            self.display_surface.blit(stat_text, stat_text_rect)
+
 
     def update(self, dt):
         self.timer['nav'].update()
