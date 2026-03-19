@@ -1,5 +1,7 @@
 from settings import *
+from random import uniform
 
+# overworld sprites
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups, z = WORLD_LAYERS['main']):
         super().__init__(groups)
@@ -46,5 +48,30 @@ class AnimatedSprite(Sprite):
         self.frames_index += ANIMATION_SPEED * dt
         self.image = self.frames[int(self.frames_index) % len(self.frames)]
         
+    def update(self, dt):
+        self.animate(dt)
+
+# battle sprites
+class MonsterSprite(pygame.sprite.Sprite):
+    def __init__(self, pos, frames, groups, monster, index, pos_index, entity):
+        # data
+        self.index = index
+        self.pos_index = pos_index
+        self.entity = entity
+        self.monster = monster
+        self.frames_index = 0
+        self.frames = frames
+        self.state = 'idle'
+        self.animation_speed = ANIMATION_SPEED + uniform(-1, 1)
+
+        # sprite setup
+        super().__init__(groups)
+        self.image = self.frames[self.state][self.frames_index]
+        self.rect = self.image.get_frect(center = pos)
+
+    def animate(self, dt):
+        self.frames_index += ANIMATION_SPEED * dt
+        self.image = self.frames[self.state][int(self.frames_index) % len(self.frames[self.state])]
+
     def update(self, dt):
         self.animate(dt)

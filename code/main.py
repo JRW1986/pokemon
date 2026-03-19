@@ -9,6 +9,7 @@ from dialog import DialogTree
 from game_data import *
 from monster import Monster
 from monster_index import MonsterIndex
+from battle import Battle
 
 class Game:
     # general setup
@@ -20,7 +21,7 @@ class Game:
 
         # player monster setup
         self.player_monsters = {
-            0: Monster('Ivieron', 32),
+            0: Monster('Friolera', 25),
 			1: Monster('Atrox', 15),
 			2: Monster('Cindrill', 16),
 			3: Monster('Pluma', 10),
@@ -29,6 +30,15 @@ class Game:
 			6: Monster('Jacana', 10),
             7: Monster('Finsta', 12),
             8: Monster('Finiette', 12),
+            9: Monster('Cleaf', 14)
+        }
+
+        self.dummy_monster = {
+            0: Monster('Gulfin', 12),
+			1: Monster('Jacana', 15),
+            2: Monster('Finsta', 19),
+            3: Monster('Finiette', 12),
+            4: Monster('Cleaf', 14)
         }
 
         # groups
@@ -52,6 +62,7 @@ class Game:
         self.dialog_tree = None
         self.monster_index = MonsterIndex(self.player_monsters, self.fonts, self.monster_frames)
         self.index_open = False
+        self.battle = Battle(self.player_monsters, self.dummy_monster, self.monster_frames, self.bg_frames['forest'], self.fonts)
 
     def import_assets(self):
         self.tmx_maps = tmx_importer('data', 'maps')
@@ -73,7 +84,9 @@ class Game:
             'icons': import_folder_dict('graphics', 'icons'),
             'monsters': monster_importer(4, 2,'graphics', 'monsters'),
             'ui': import_folder_dict('graphics', 'ui')
-        } 
+        }
+
+        self.bg_frames = import_folder_dict('graphics', 'backgrounds')
 
     def setup(self, tmx_map, player_start_pos):
         # clear the map
@@ -144,7 +157,7 @@ class Game:
 
     # dialogue system
     def input(self):
-        if not self.dialog_tree:
+        if not self.dialog_tree and not self.battle:
             keys = pygame.key.get_just_pressed()
             if keys[pygame.K_SPACE]:
                 for character in self.character_sprites:
@@ -213,7 +226,8 @@ class Game:
 
             # overlays
             if self.dialog_tree: self.dialog_tree.update()
-            if self.index_open: self.monster_index.update(dt)
+            if self.index_open:  self.monster_index.update(dt)
+            if self.battle:      self.battle.update(dt)
 
             self.tint_screen(dt)
             pygame.display.update()

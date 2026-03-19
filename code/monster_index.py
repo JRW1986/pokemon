@@ -1,6 +1,7 @@
 from settings import *
 from timer import Timer
 from support import draw_bar
+from game_data import MONSTER_DATA, ATTACK_DATA
 
 class MonsterIndex:
     def __init__(self, monster, fonts, monster_frames):
@@ -28,6 +29,18 @@ class MonsterIndex:
         self.item_height = self.main_rect.height / self.visible_items
         self.index = 0
         self.selected_index = None
+
+        # max value for bars
+        self.max_stats = {}
+        for data in MONSTER_DATA.values():
+            for stat, value in data['stats'].items():
+                if stat != 'element':
+                    if stat not in self.max_stats:
+                        self.max_stats[stat] = value
+                    else:
+                        self.max_stats[stat] = value if value > self.max_stats[stat] else self.max_stats[stat]
+        self.max_stats['health'] = self.max_stats.pop('max_health')
+        self.max_stats['energy'] = self.max_stats.pop('max_energy')
 
         # timer
         self.timer = {
@@ -60,6 +73,9 @@ class MonsterIndex:
         self.index = self.index % len(self.monster)
 
     def display_list(self):
+        bg_rect = pygame.FRect(self.main_rect.left, self.main_rect.top, self.list_width, self.main_rect.height)
+        pygame.draw.rect(self.display_surface, COLORS['dark'], bg_rect, 0,12,0,12,0)
+        
         v_offset = 0 if self.index < self.visible_items else -(self.index - self.visible_items + 1) * self.item_height
         for index, monster in self.monster.items():
             # colors
@@ -102,7 +118,6 @@ class MonsterIndex:
     def display_main(self, dt):
         # data
         monster = self.monster[self.index]
-
 
         # main bg
         rect = pygame.FRect(self.main_rect.left + self.list_width, self.main_rect.top, self.main_rect.width - self.list_width, self.main_rect.height)
@@ -187,7 +202,7 @@ class MonsterIndex:
         stats_rect = pygame.FRect(sides['left'], energybar_rect.bottom, healthbar_rect.width, info_height).inflate(0, -15)
         pygame.draw.rect(self.display_surface, COLORS['light-gray'], stats_rect)
         stats_text_surf = self.fonts['regular'].render('Stats:', False, COLORS['white'])
-        stats_text_rect = stats_text_surf.get_frect(topleft = stats_rect.topleft + vector(10, 0))
+        stats_text_rect = stats_text_surf.get_frect(topleft = stats_rect.topleft + vector(5, 0))
         self.display_surface.blit(stats_text_surf, stats_text_rect)
 
         monster_stats = monster.get_stats()
@@ -198,14 +213,41 @@ class MonsterIndex:
             
             # icon
             icon_surf = self.ui_frames[stat]
-            icon_rect = icon_surf.get_frect(midleft = single_stat_rect.midleft + vector(5, 0))
+            icon_rect = icon_surf.get_frect(midleft = single_stat_rect.midleft + vector(5, -17)).inflate(0, 7)
             self.display_surface.blit(icon_surf, icon_rect)
 
             # text
             stat_text = self.fonts['regular'].render(f'{stat.capitalize()}: {value}', False, COLORS['white'])
-            stat_text_rect = stat_text.get_frect(topleft = single_stat_rect.topleft + vector(10, 0))
+            stat_text_rect = stat_text.get_frect(topleft = single_stat_rect.topleft + vector(25, -16)).inflate(0, -8)
             self.display_surface.blit(stat_text, stat_text_rect)
 
+            # bar
+            bar_rect = pygame.FRect((0,0), (single_stat_rect.width - 10, 6)).move_to(bottomleft = single_stat_rect.bottomleft + vector(5, -21))
+            draw_bar(
+                surf = self.display_surface,
+                rect = bar_rect,
+                value = value,
+                max_value = self.max_stats[stat] * monster.level,
+                color = COLORS[monster.element],
+                bg_color = COLORS['dark']
+            )
+
+            # abilities
+            abilities_rect = pygame.FRect(sides['right'] - healthbar_rect.width - 13, energybar_rect.bottom - 41, healthbar_rect.width, info_height).inflate(20, 66)
+            pygame.draw.rect(self.display_surface, COLORS['light-gray'], abilities_rect)
+            abilities_text_surf = self.fonts['regular'].render('Abilities:', False, COLORS['white'])
+            abilities_text_rect = abilities_text_surf.get_frect(topleft = abilities_rect.topleft + vector(5, 0))
+            self.display_surface.blit(abilities_text_surf, abilities_text_rect)
+
+            for index, ability in enumerate(monster.get_abilities()):
+                element = ATTACK_DATA[ability]['element']
+
+                text_surf = self.fonts['regular'].render(ability, False, COLORS['black'])
+                x = abilities_rect.left + index % 2 * abilities_rect.width / 2
+                y = 29 + abilities_rect.top + int(index / 2) * (text_surf.get_height() + 25)
+                text_rect = text_surf.get_frect(topleft = (x + 15, y))
+                pygame.draw.rect(self.display_surface, COLORS[element], text_rect.inflate(10, 10), 0, 4)
+                self.display_surface.blit(text_surf, text_rect)
 
     def update(self, dt):
         self.timer['nav'].update()
