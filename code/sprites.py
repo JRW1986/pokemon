@@ -1,5 +1,8 @@
+from turtle import pos
+
 from settings import *
 from random import uniform
+from support import draw_bar
 
 # overworld sprites
 class Sprite(pygame.sprite.Sprite):
@@ -75,3 +78,44 @@ class MonsterSprite(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.animate(dt)
+
+class MonsterLevelSprite(pygame.sprite.Sprite):
+    def __init__(self, pos, monster_sprite, font, groups):
+        super().__init__(groups)
+        self.monster_sprite = monster_sprite
+        self.font = font
+        self.pos = pos
+        padding = 7
+
+        text_surf = font.render(f"Lv. {monster_sprite.monster.level}", False, COLORS['black'])
+        self.image = pygame.Surface((text_surf.get_width() + 2 * padding, text_surf.get_height() + 2 * padding))
+        self.image.fill(COLORS['white'])
+        self.image.blit(text_surf, (padding, padding))
+        self.rect = self.image.get_rect(midbottom = self.pos)
+        self.xp_rect = pygame.FRect(0, self.rect.height - 2, self.rect.width, 2)
+
+    def update(self, _):
+        padding = 7
+        self.image.fill(COLORS['white'])
+        
+        text_surf = self.font.render(f"Lv. {self.monster_sprite.monster.level}", False, COLORS['black'])
+        self.rect = self.image.get_rect(midbottom = self.pos)
+        self.image.blit(text_surf, (padding, padding))
+        
+        draw_bar(self.image, self.xp_rect, self.monster_sprite.monster.xp, self.monster_sprite.monster.level_up, COLORS['black'], COLORS['white'], 0)
+
+
+class MonsterStatsSprite(pygame.sprite.Sprite):
+    def __init__(self, pos, monster_sprite, size, font, groups):
+        super().__init__(groups)
+        self.monster_sprite = monster_sprite
+        self.image = pygame.Surface(size)
+        self.rect = self.image.get_rect(midbottom = pos)
+
+        text_surf = font.render(f"HP: {monster_sprite.monster.health}", False, COLORS['black'])
+        padding = 15
+
+        
+        self.image.fill(COLORS['white'])
+        self.image.blit(text_surf, (padding, padding))
+        self.rect = self.image.get_rect(midbottom = pos)
