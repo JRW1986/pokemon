@@ -34,11 +34,11 @@ class Game:
         }
 
         self.dummy_monster = {
-            0: Monster('Gulfin', 12),
-			1: Monster('Jacana', 15),
-            2: Monster('Finsta', 19),
-            3: Monster('Finiette', 12),
-            4: Monster('Cleaf', 14)
+            0: Monster('Gulfin', 3),
+			1: Monster('Jacana', 1),
+            2: Monster('Finsta', 1),
+            3: Monster('Finiette', 1),
+            4: Monster('Cleaf', 4)
         }
 
         # groups
@@ -85,6 +85,8 @@ class Game:
             'monsters': monster_importer(4, 2,'graphics', 'monsters'),
             'ui': import_folder_dict('graphics', 'ui')
         }
+
+        self.monster_frames['outlines'] = outline_creator(self.monster_frames['monsters'], 4)
 
         self.bg_frames = import_folder_dict('graphics', 'backgrounds')
 

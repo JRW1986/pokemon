@@ -3,6 +3,8 @@ from turtle import pos
 from settings import *
 from random import uniform
 from support import draw_bar
+from game_data import MONSTER_DATA
+from timer import Timer
 
 # overworld sprites
 class Sprite(pygame.sprite.Sprite):
@@ -66,18 +68,52 @@ class MonsterSprite(pygame.sprite.Sprite):
         self.frames = frames
         self.state = 'idle'
         self.animation_speed = ANIMATION_SPEED + uniform(-1, 1)
+        self.z = BATTLE_LAYERS['monster']
+        self.highlight = False
 
         # sprite setup
         super().__init__(groups)
         self.image = self.frames[self.state][self.frames_index]
         self.rect = self.image.get_frect(center = pos)
 
+        # timers
+        self.timers = {
+            'remove highlight': Timer(300, func = lambda: self.set_highlight(False))
+        }
+
     def animate(self, dt):
         self.frames_index += ANIMATION_SPEED * dt
-        self.image = self.frames[self.state][int(self.frames_index) % len(self.frames[self.state])]
+        self.adjusted_frame_index = int(self.frames_index) % len(self.frames[self.state])
+        self.image = self.frames[self.state][self.adjusted_frame_index]
+
+        if self.highlight:
+            white_surf = pygame.mask.from_surface(self.image).to_surface()
+            white_surf.set_colorkey('black')
+            self.image = white_surf
+
+    def set_highlight(self, value):
+        self.highlight = value
+        if value:
+            self.timers['remove highlight'].activate()
 
     def update(self, dt):
+        for timer in self.timers.values():
+            timer.update()
         self.animate(dt)
+        self.monster.update(dt)
+
+class MonsterOutlineSprite(pygame.sprite.Sprite):
+    def __init__(self, monster_sprite, groups, frames):
+        super().__init__(groups)
+        self.z = BATTLE_LAYERS['outline']
+        self.monster_sprite = monster_sprite
+        self.frames = frames
+
+        self.image = self.frames[self.monster_sprite.state][self.monster_sprite.frames_index]
+        self.rect = self.image.get_frect(center = self.monster_sprite.rect.center)
+
+    def update(self, _):
+        self.image = self.frames[self.monster_sprite.state][self.monster_sprite.adjusted_frame_index]
 
 class MonsterLevelSprite(pygame.sprite.Sprite):
     def __init__(self, pos, monster_sprite, font, groups):
@@ -86,14 +122,14 @@ class MonsterLevelSprite(pygame.sprite.Sprite):
         self.font = font
         self.pos = pos
         padding = 7
-
+        self.z = BATTLE_LAYERS['name']
+        
         text_surf = font.render(f"Lv. {monster_sprite.monster.level}", False, COLORS['black'])
         self.image = pygame.Surface((text_surf.get_width() + 2 * padding, text_surf.get_height() + 2 * padding))
         self.image.fill(COLORS['white'])
         self.image.blit(text_surf, (padding, padding))
         self.rect = self.image.get_rect(midbottom = self.pos)
-        self.xp_rect = pygame.FRect(0, self.rect.height - 2, self.rect.width, 2)
-
+        
     def update(self, _):
         padding = 7
         self.image.fill(COLORS['white'])
@@ -102,20 +138,30 @@ class MonsterLevelSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom = self.pos)
         self.image.blit(text_surf, (padding, padding))
         
+        self.xp_rect = pygame.FRect(0, self.rect.height - 2, self.rect.width, 2)
         draw_bar(self.image, self.xp_rect, self.monster_sprite.monster.xp, self.monster_sprite.monster.level_up, COLORS['black'], COLORS['white'], 0)
 
-
 class MonsterStatsSprite(pygame.sprite.Sprite):
-    def __init__(self, pos, monster_sprite, size, font, groups):
+    def __init__(self, pos, monster_sprite, size, groups, font):
         super().__init__(groups)
         self.monster_sprite = monster_sprite
+        self.font = font
         self.image = pygame.Surface(size)
-        self.rect = self.image.get_rect(midbottom = pos)
+        self.rect = self.image.get_frect(midbottom = pos)
+        self.z = BATTLE_LAYERS['overlay']
 
-        text_surf = font.render(f"HP: {monster_sprite.monster.health}", False, COLORS['black'])
-        padding = 15
-
-        
+    def update(self, _):
         self.image.fill(COLORS['white'])
-        self.image.blit(text_surf, (padding, padding))
-        self.rect = self.image.get_rect(midbottom = pos)
+
+        for index, (value, max_value) in enumerate(self.monster_sprite.monster.get_info()):
+            color = (COLORS['red'], COLORS['blue'], COLORS['gray'])[index]
+            if index < 2: # health and energy
+                text_surf = self.font.render(f"{int(value)} / {max_value}", False, COLORS['black'])
+                text_rect = text_surf.get_frect(midleft = (10, 10 + index * 20))
+                
+                self.image.blit(text_surf, text_rect)
+                bar_rect = draw_bar(self.image, pygame.FRect(0, 0, self.rect.width -15, 3).move(9, index * 20 + 18), value, max_value, color, COLORS['light-gray'], 2)
+            else: # initiative
+                initative_rect = pygame.FRect((0, self.rect.height - 2), (self.rect.width, 20))
+                bar_rect = draw_bar(self.image, initative_rect, value, max_value, color, COLORS['white'], 0)
+                
