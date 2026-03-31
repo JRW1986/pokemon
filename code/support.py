@@ -122,7 +122,14 @@ def outline_creator(frame_dict, width):
 				outline_frame_dict[monster][state].append(new_surf)
 
 	return outline_frame_dict
-	
+
+def attack_importer(*path):
+	attack_dict = {}
+	for folder_path, sub_folders, image_names in walk(join(*path)):
+		for image_name in image_names:
+			image_name = image_name.split('.')[0]
+			attack_dict[image_name] = list(import_tilemap(4, 1, folder_path, image_name).values())
+	return attack_dict
 
 # game functions
 def draw_bar(surf, rect, value, max_value, color, bg_color, radius = 1):

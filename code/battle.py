@@ -1,5 +1,5 @@
 from settings import *
-from sprites import MonsterSprite, MonsterLevelSprite, MonsterStatsSprite, MonsterOutlineSprite
+from sprites import MonsterSprite, MonsterLevelSprite, MonsterStatsSprite, MonsterOutlineSprite, AttackSprite
 from groups import BattleSprites
 from game_data import ATTACK_DATA
 from support import draw_bar
@@ -40,7 +40,7 @@ class Battle:
             for index, monster in {k:v for k,v in monsters.items() if k <= 2}.items():
                 self.create_monster(monster, index, index, entity, 0)
 
-    def create_monster(self, monster, index, pos_index, entity, dt):
+    def create_monster(self, monster, index, pos_index, entity, dt, ):
         frames = self.monster_frames['monsters'][monster.name]
         outline_frames = self.monster_frames['outlines'][monster.name]
         self.frame_index += ANIMATION_SPEED * dt
@@ -54,14 +54,15 @@ class Battle:
             pos = list(BATTLE_POSITIONS['right'].values())[pos_index]
             groups = (self.battle_sprites, self.opponent_sprites)
         
-        monster_sprite =MonsterSprite(
+        monster_sprite = MonsterSprite(
             pos,
             frames,
             groups,
             monster,
             index,
             pos_index,
-            entity
+            entity,
+            self.apply_attack
         )
         MonsterOutlineSprite(monster_sprite, self.battle_sprites, outline_frames)
 
@@ -135,6 +136,44 @@ class Battle:
     def update_all_monsters(self, option):
         for monster_sprite in self.player_sprites.sprites() + self.opponent_sprites.sprites():
             monster_sprite.monster.paused =  True if option == 'pause' else False
+
+    def apply_attack(self, target_sprite, attack, amount):
+        AttackSprite(target_sprite.rect.center, self.monster_frames['attacks'][ATTACK_DATA[attack]['animation']], self.battle_sprites)
+
+        attack_element = ATTACK_DATA[attack]['element']
+        target_element = target_sprite.monster.element
+
+        # double damage if elemental advantage
+        if attack_element ==  'fire' and target_element == 'plant' or\
+           attack_element ==  'water' and target_element == 'fire' or\
+           attack_element ==  'plant' and target_element == 'water':
+            amount *= 2
+
+        # half damage if elemental disadvantage
+        if attack_element ==  'fire' and target_element == 'water' or\
+           attack_element ==  'water' and target_element == 'plant' or\
+           attack_element ==  'plant' and target_element == 'fire':
+            amount *= 0.5
+
+        target_defense = 1 - target_sprite.monster.get_stat('defense') / 2000
+        target_defense = max(0, min(1, target_defense))
+
+        # update target health
+        target_sprite.monster.health -= amount * target_defense
+        self.check_death()
+
+        # resume
+        self.update_all_monsters('resume')
+
+    def check_death(self):
+        for monster_sprite in self.opponent_sprites.sprites() + self.player_sprites.sprites():
+            if monster_sprite.monster.health <= 0:
+                if self.player_sprites in monster_sprite.groups(): # player
+                    pass
+                else: # opponent
+                    monster_sprite.kill()
+                    
+            
 
     #ui
     def draw_ui(self):
