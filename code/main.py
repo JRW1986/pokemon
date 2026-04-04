@@ -21,9 +21,9 @@ class Game:
 
         # player monster setup
         self.player_monsters = {
-            0: Monster('Friolera', 25),
-			1: Monster('Atrox', 15),
-			2: Monster('Cindrill', 16),
+            0: Monster('Friolera', 36),
+			1: Monster('Atrox', 34),
+			2: Monster('Cindrill', 1),
 			3: Monster('Pluma', 10),
 			4: Monster('Sparchu', 11),
 			5: Monster('Gulfin', 9),
@@ -34,10 +34,10 @@ class Game:
         }
 
         self.dummy_monster = {
-            0: Monster('Gulfin', 3),
-			1: Monster('Jacana', 1),
-            2: Monster('Finsta', 1),
-            3: Monster('Finiette', 1),
+            0: Monster('Gulfin', 30),
+			1: Monster('Jacana', 5),
+            2: Monster('Finsta', 5),
+            3: Monster('Finiette', 7),
             4: Monster('Cleaf', 4)
         }
 
@@ -60,9 +60,10 @@ class Game:
 
         # overlays
         self.dialog_tree = None
+        self.battle = None
         self.monster_index = MonsterIndex(self.player_monsters, self.fonts, self.monster_frames)
         self.index_open = False
-        self.battle = Battle(self.player_monsters, self.dummy_monster, self.monster_frames, self.bg_frames['forest'], self.fonts)
+        
 
     def import_assets(self):
         self.tmx_maps = tmx_importer('data', 'maps')
@@ -155,7 +156,8 @@ class Game:
                     player = self.player,
                     create_dialog = self.create_dialogue,
                     collision_sprites = self.collision_sprites,
-                    radius = obj.properties['radius']
+                    radius = obj.properties['radius'],
+                    nurse = obj.properties['character_id'] == 'Nurse'
                 )
 
     # dialogue system
@@ -183,7 +185,21 @@ class Game:
 
     def end_dialogue(self, character):
         self.dialog_tree = None
-        self.player.unblock_movement()
+        if character.nurse:
+            for monster in self.player_monsters.values():
+                monster.health = monster.get_stat('max_health')
+                monster.energy = monster.get_stat('max_energy')
+            
+            self.player.unblock_movement()
+        elif not character.character_data['defeated']:
+            self.transition_target = Battle(
+                player_monsters = self.player_monsters,
+                opponent_monsters = character.monsters,
+                monster_frames = self.monster_frames,
+                bg_surf = self.bg_frames[character.character_data['biome']],
+                fonts = self.fonts)
+            self.tint_mode = 'tint'
+            
 
     # transition system
     def transition_check(self):
@@ -200,7 +216,12 @@ class Game:
         if self.tint_mode == 'tint':
             self.tint_progress += self.tint_speed * dt
             if self.tint_progress >= 255:
-                self.setup(self.tmx_maps[self.transition_target[0]], self.transition_target[1])
+                if type(self.transition_target) == Battle:
+                    self.battle = self.transition_target
+                elif self.transition_target == 'level':
+                    self.battle = None
+                else:
+                    self.setup(self.tmx_maps[self.transition_target[0]], self.transition_target[1])
                 self.tint_mode = 'untint'
                 self.transition_target = None
 
