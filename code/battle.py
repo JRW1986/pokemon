@@ -8,15 +8,17 @@ from random import choice
 
 class Battle:
     # main
-    def __init__(self, player_monsters, opponent_monsters, monster_frames, bg_surf, fonts):
+    def __init__(self, player_monsters, opponent_monsters, monster_frames, bg_surf, fonts, end_battle, character):
         # general
         self.display_surface = pygame.display.get_surface()
         self.bg_surf = bg_surf
         self.monster_frames = monster_frames
         self.fonts = fonts
+        self.end_battle = end_battle
         self.monster_data = {'player': player_monsters, 'opponent': opponent_monsters}
         self.frame_index = 0
         self.battle_over = False
+        self.character = character
 
         # timers
         self.timers = {
@@ -53,7 +55,7 @@ class Battle:
                 del self.monster_data['opponent'][i]
 
     def create_monster(self, monster, index, pos_index, entity):
-
+        monster.paused = False
         frames = self.monster_frames['monsters'][monster.name]
         outline_frames = self.monster_frames['outlines'][monster.name]
         
@@ -240,7 +242,14 @@ class Battle:
         # opponent defeat
         if len(self.opponent_sprites) == 0 and not self.battle_over:
             self.battle_over = True
+            self.end_battle(self.character)
             for monster in self.monster_data['player'].values():
+                monster.initiative = 0
+                
+        # player defeat
+        if len(self.player_sprites) == 0 and not self.battle_over:
+            self.battle_over = True
+            for monster in self.monster_data['opponent'].values():
                 monster.initiative = 0
 
     #ui
