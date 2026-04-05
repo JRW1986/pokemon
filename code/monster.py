@@ -20,6 +20,7 @@ class Monster:
         # experience
         self.xp = 0
         self.level_up = self.level * 150
+        self.evolution = MONSTER_DATA[self.name]['evolve']
 
     def __repr__(self):
         return f'monster: {self.name} | level: {self.level} | health: {self.health} | energy: {self.energy} | xp: {self.xp}'

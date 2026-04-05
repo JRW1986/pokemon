@@ -57,7 +57,7 @@ class Entity(pygame.sprite.Sprite):
         self.animate(dt)
 
 class Character(Entity):
-    def __init__(self, pos, frames, groups, facing_direction, character_data, player, create_dialog, collision_sprites, radius, nurse):
+    def __init__(self, pos, frames, groups, facing_direction, character_data, player, create_dialog, collision_sprites, radius, nurse, notice_sound):
         super().__init__(pos, frames, groups, facing_direction)
         self.character_data = character_data
         self.player = player
@@ -78,6 +78,8 @@ class Character(Entity):
             'notice': Timer(500, func = self.start_movement)
         }
 
+        self.notice_sound = notice_sound
+
     def random_view_direction(self):
         if self.can_rotate:
             self.facing_direction = choice(self.view_direction)
@@ -94,6 +96,8 @@ class Character(Entity):
             self.can_rotate = False
             self.has_noticed = True
             self.player.noticed = True
+            if self.notice_sound:
+                self.notice_sound.play()
     
     def has_los(self):
         collisions = [bool(rect.clipline(self.rect.center, self.player.rect.center)) for rect in self.collision_rects]

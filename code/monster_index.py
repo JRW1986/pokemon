@@ -235,7 +235,7 @@ class MonsterIndex:
             # abilities
             abilities_rect = pygame.FRect(sides['right'] - healthbar_rect.width - 13, energybar_rect.bottom - 41, healthbar_rect.width, info_height).inflate(20, 66)
             pygame.draw.rect(self.display_surface, COLORS['light-gray'], abilities_rect)
-            abilities_text_surf = self.fonts['regular'].render('Abilities:', False, COLORS[COLORS['white']])
+            abilities_text_surf = self.fonts['regular'].render('Abilities:', False, COLORS['white'])
             abilities_text_rect = abilities_text_surf.get_frect(topleft = abilities_rect.topleft + vector(5, 0))
             self.display_surface.blit(abilities_text_surf, abilities_text_rect)
 
